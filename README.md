@@ -16,5 +16,5 @@
 ### 1️⃣ Установите зависимости
 
 ```bash
-pip install ccxt python-telegram-bot requests python-dotenv
+pip install ccxt matplotlib pandas numpy scikit-learn ta requests python-telegram-bot
 ```

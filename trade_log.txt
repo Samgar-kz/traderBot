@@ -1,0 +1,20 @@
+2025-02-23 00:29:26,898 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getMe "HTTP/1.1 200 OK"
+2025-02-23 00:29:27,025 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/deleteWebhook "HTTP/1.1 200 OK"
+2025-02-23 00:29:27,028 - INFO - Application started
+2025-02-23 00:29:27,405 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:29:27,653 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/sendMessage "HTTP/1.1 200 OK"
+2025-02-23 00:29:27,840 - INFO - AI Bot запущен!
+2025-02-23 00:29:29,254 - ERROR - Ошибка: Не удалось получить ликвидные пары.
+2025-02-23 00:29:37,601 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:29:47,737 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:29:57,866 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:30:07,992 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:30:18,127 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:30:28,253 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:30:38,426 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:40:05,749 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getMe "HTTP/1.1 200 OK"
+2025-02-23 00:40:05,876 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/deleteWebhook "HTTP/1.1 200 OK"
+2025-02-23 00:40:05,880 - INFO - Application started
+2025-02-23 00:40:06,402 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/getUpdates "HTTP/1.1 200 OK"
+2025-02-23 00:40:06,645 - INFO - HTTP Request: POST https://api.telegram.org/bot7656647615:AAHt1fR2AfwyYkmfyA4v0ARYGICzulJIYOg/sendMessage "HTTP/1.1 200 OK"
+2025-02-23 00:40:06,842 - INFO - AI Bot запущен!

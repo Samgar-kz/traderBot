@@ -1,25 +1,35 @@
 import asyncio
+import threading
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 from config import TELEGRAM_TOKEN
-from trading_logic import trade_logic, is_running
+from trading_logic import trade_logic, stop_trading
+
+trade_thread = None  # Переменная для потока торговли
 
 async def start(update: Update, context: CallbackContext):
     """Запуск бота"""
-    global is_running
-    if is_running:
+    global trade_thread
+
+    if trade_thread and trade_thread.is_alive():
         await update.message.reply_text("⚠ Бот уже работает!")
         return
 
-    is_running = True
-    asyncio.create_task(trade_logic())  # Запускаем торговлю в фоне
+    trade_thread = threading.Thread(target=lambda: asyncio.run(trade_logic()), daemon=True)
+    trade_thread.start()
+
     await update.message.reply_text("🚀 Бот запущен. Начинаю отслеживать рынок!")
 
 async def stop(update: Update, context: CallbackContext):
     """Остановка бота"""
-    global is_running
-    is_running = False
-    await update.message.reply_text("❌ Бот остановлен!")
+    global trade_thread
+
+    if not trade_thread or not trade_thread.is_alive():
+        await update.message.reply_text("⚠ Бот уже остановлен!")
+        return
+
+    await update.message.reply_text("❌ Бот остановлен! (Завершение сделок...)")
+    await stop_trading()
 
 def main():
     """Главная функция запуска бота"""

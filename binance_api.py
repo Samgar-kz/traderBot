@@ -1,5 +1,7 @@
 import ccxt
 from config import API_KEY, API_SECRET
+from telegram_bot import send_telegram_message
+
 
 exchange = ccxt.binance({
     'apiKey': API_KEY,
@@ -64,12 +66,32 @@ def place_order(symbol, order_type, amount):
         return None
     
 def get_top_liquid_pairs(limit=5):
-    """Получает топ ликвидные пары USDT по объему торгов"""
+    """ Получает топ-ликвидные торговые пары с USDT """
     try:
         tickers = exchange.fetch_tickers()
-        volumes = {symbol: tickers[symbol]['quoteVolume'] for symbol in tickers if '/USDT' in symbol}
+        volumes = {}
+
+        for symbol, data in tickers.items():
+            try:
+                if '/USDT' in symbol and 'quoteVolume' in data:
+                    volumes[symbol] = data['quoteVolume']
+            except Exception as e:
+                print(f"⚠ Ошибка при обработке {symbol}: {e}")
+
+        if not volumes:
+            raise ValueError("❌ Нет доступных ликвидных пар. Проверь Binance API.")
+
         sorted_pairs = sorted(volumes.items(), key=lambda x: x[1], reverse=True)
         return [pair[0] for pair in sorted_pairs[:limit]]
+
+    except ccxt.BaseError as e:
+        error_message = f"❌ Ошибка Binance API в get_top_liquid_pairs: {str(e)}"
+        print(error_message)
+        send_telegram_message(error_message)
+        return []
+
     except Exception as e:
-        print(f"Ошибка получения ликвидных пар: {e}")
+        error_message = f"❌ Неизвестная ошибка в get_top_liquid_pairs: {str(e)}"
+        print(error_message)
+        send_telegram_message(error_message)
         return []

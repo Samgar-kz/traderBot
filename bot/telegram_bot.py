@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 from config import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
 from datetime import datetime
+import matplotlib.dates as mdates
 
 # ✅ Отправка текстового сообщения в Telegram
 def send_telegram_message(message):
@@ -60,7 +61,7 @@ async def send_price_chart(historical_data):
         send_telegram_message("⚠ Ошибка: Нет данных для графика!")
         return
     
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(12, 6))  # ✅ Увеличенный размер для лучшей видимости
 
     for pair, data in historical_data.items():
         try:
@@ -76,7 +77,7 @@ async def send_price_chart(historical_data):
                 normalized_prices = [(float(p) / initial_price - 1) * 100 for p in prices]
                 
                 # ✅ Преобразуем миллисекунды в datetime
-                timestamps = [datetime.fromtimestamp(ts / 1000) for ts in timestamps]
+                timestamps = [datetime.utcfromtimestamp(ts / 1000) for ts in timestamps]
                 
                 plt.plot(timestamps, normalized_prices, label=pair)
 
@@ -85,15 +86,21 @@ async def send_price_chart(historical_data):
             continue
 
     plt.legend()
-    plt.xlabel("Время")
+    plt.xlabel("Дата и время")
     plt.ylabel("Изменение цены (%)")
     plt.title("📊 30-минутный отчет о рынке (нормализованные цены)")
-    plt.xticks(rotation=45)  # ✅ Поворачиваем подписи оси X для читаемости
-    plt.grid(True)  # ✅ Добавляем сетку для наглядности
+
+    # ✅ Форматируем ось X для читаемости
+    ax = plt.gca()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+
+    plt.xticks(rotation=45)  # ✅ Подписи наклонены для удобства
+    plt.grid(True, linestyle="--", alpha=0.6)  # ✅ Улучшенная сетка для наглядности
 
     # ✅ Сохраняем изображение в BytesIO и отправляем
     img_buf = BytesIO()
-    plt.savefig(img_buf, format="png")
+    plt.savefig(img_buf, format="png", bbox_inches="tight")  # ✅ Убираем лишние поля
     img_buf.seek(0)
 
     send_telegram_photo(img_buf, caption="📊 30-минутный отчет о рынке")

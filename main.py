@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 from config import TELEGRAM_TOKEN
-from trading_logic import trade_logic, stop_trading, is_running
+from core.trading_logic import trade_logic, stop_trading, is_running
 
 # ✅ Логирование (пишем ошибки в `bot_log.txt`)
 logging.basicConfig(filename="bot_log.txt", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

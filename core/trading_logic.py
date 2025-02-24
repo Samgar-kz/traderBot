@@ -48,7 +48,7 @@ async def trade_logic():
         send_telegram_message(f"💰 Баланс: {initial_balance:.2f} USDT. Готов к торговле!")
 
         # ✅ Получаем топ-ликвидные пары
-        PAIRS = get_top_liquid_pairs(1)
+        PAIRS = get_top_liquid_pairs(10)
         if not PAIRS:
             send_telegram_message("❌ Ошибка: Нет доступных пар для торговли!")
             is_running.clear()
@@ -147,16 +147,12 @@ async def send_market_report():
         return  
 
     formatted_data = format_historical_data(historical_data)
-
-    print(formatted_data)
-
     await send_price_chart(formatted_data)  # Отправляем только если есть данные
 
 def format_historical_data(historical_data):
     formatted_data = {}
 
     for pair, data in historical_data.items():
-        print(f"\n🔍 DEBUG {pair}: {data[:5]}")  # Выводим первые 5 строк для проверки
 
         if not isinstance(data, list) or len(data) < 2:
             print(f"⚠ Ошибка структуры данных {pair} (ожидался список OHLCV)")

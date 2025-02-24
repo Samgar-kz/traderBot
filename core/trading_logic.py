@@ -48,7 +48,7 @@ async def trade_logic():
         send_telegram_message(f"💰 Баланс: {initial_balance:.2f} USDT. Готов к торговле!")
 
         # ✅ Получаем топ-ликвидные пары
-        PAIRS = get_top_liquid_pairs(10)
+        PAIRS = get_top_liquid_pairs(1)
         if not PAIRS:
             send_telegram_message("❌ Ошибка: Нет доступных пар для торговли!")
             is_running.clear()
@@ -72,7 +72,7 @@ async def trade_logic():
             trade_executed = False  
 
             # ✅ Отправляем отчет раз в 30 минут
-            if (time.time() - last_report_time) >= 1800:
+            if (time.time() - last_report_time) >= 60:
                 await send_market_report()
                 last_report_time = time.time()
 
@@ -137,31 +137,55 @@ async def trade_logic():
         is_running.clear()
 
 async def send_market_report():
-    """Отправляет отчет о рынке каждые 30 минут."""
     send_telegram_message("📊 30-минутный отчет о рынке...")
+
     if not historical_data or all(len(data) == 0 for data in historical_data.values()):
         send_telegram_message("⚠ Ошибка: Нет данных для графика! Исторические данные не загружены.")
-        return
+        return  
+
     formatted_data = format_historical_data(historical_data)
-    await send_price_chart(formatted_data)
+
+  
+    print("📊 Данные перед графиком:", formatted_data)
+
+    await send_price_chart(formatted_data)  # Отправляем только если есть данные
+
+
 
 def format_historical_data(historical_data):
-    """Преобразует исторические данные в формат для графика."""
     formatted_data = {}
 
     for pair, data in historical_data.items():
-        if not data or len(data) == 0:
-            continue  
+        print(f"\n🔍 DEBUG {pair}: {data}")  # 🔍 Выведет, что приходит в data
+        if not isinstance(data, dict) or "timestamps" not in data or "prices" not in data:
+            print(f"⚠ Ошибка структуры данных {pair}")
+            continue
 
-        timestamps = [entry[0] for entry in data]
-        prices = [entry[4] for entry in data]
+        timestamps = data["timestamps"]
+        prices = data["prices"]
 
-        formatted_data[pair] = {
-            "timestamps": timestamps,
-            "prices": prices
-        }
+        if len(timestamps) < 2 or len(prices) < 2:
+            print(f"⚠ Недостаточно данных для {pair} (таймстемпов: {len(timestamps)}, цен: {len(prices)})")
+            continue
+
+        if len(timestamps) != len(prices):
+            print(f"⚠ Ошибка: Несовпадение таймстемпов ({len(timestamps)}) и цен ({len(prices)}) у {pair}")
+            continue
+
+        try:
+            timestamps = [int(ts) for ts in timestamps]
+            prices = [float(p) for p in prices]
+        except ValueError as e:
+            print(f"⚠ Ошибка конвертации данных {pair}: {e}")
+            continue
+
+        formatted_data[pair] = {"timestamps": timestamps, "prices": prices}
+
+    if not formatted_data:
+        print("❌ Все данные отфильтрованы! Нет данных для графика.")
 
     return formatted_data
+
 
 async def update_balance():
     """Обновляет баланс после сделки."""

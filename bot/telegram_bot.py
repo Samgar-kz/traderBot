@@ -27,7 +27,31 @@ def send_telegram_photo(image_buffer: BytesIO, caption="📊 График цен
     except Exception as e:
         print(f"Ошибка отправки фото в Telegram: {e}")
 
-# ✅ Отправка графика с историей цен
+# ✅ Функция проверки и форматирования данных
+def validate_historical_data(historical_data):
+    """Фильтрует и форматирует данные, удаляя ошибки"""
+    valid_data = {}
+
+    for pair, data in historical_data.items():
+        if not isinstance(data, list) or len(data) < 2:
+            print(f"⚠ Ошибка: Недостаточно данных для {pair}")
+            continue
+        
+        try:
+            timestamps = [float(entry[0]) for entry in data if isinstance(entry[0], (int, float))]
+            prices = [float(entry[4]) for entry in data if isinstance(entry[4], (int, float, str)) and entry[4].replace('.', '', 1).isdigit()]
+            
+            if len(timestamps) != len(prices):
+                print(f"⚠ Ошибка: Несовпадение длин данных в {pair} ({len(timestamps)} vs {len(prices)})")
+                continue
+
+            valid_data[pair] = {"timestamps": timestamps, "prices": prices}
+        
+        except (ValueError, IndexError, KeyError) as e:
+            print(f"⚠ Ошибка обработки данных для {pair}: {e}")
+    
+    return valid_data if valid_data else None
+
 def send_price_chart(historical_data):
     """Строит и отправляет график цен для нескольких валютных пар."""
     
@@ -35,18 +59,27 @@ def send_price_chart(historical_data):
         send_telegram_message("⚠ Ошибка: Нет данных для графика!")
         return
 
+    print("📊 Полученные данные для графика:")
+    for pair, data in historical_data.items():
+        print(f"{pair}: {data}")
+        print("\n")
+
     plt.figure(figsize=(10, 5))
 
     for pair, data in historical_data.items():
         try:
-            timestamps = [entry[0] for entry in data]  # Временные метки
-            prices = [entry[4] for entry in data]  # Закрытие цены
-            
+            if not isinstance(data, dict) or "timestamps" not in data or "prices" not in data:
+                print(f"⚠ Ошибка структуры данных {pair}")
+                continue
+
+            timestamps = data["timestamps"]
+            prices = data["prices"]
+
             if len(prices) > 1:
                 initial_price = float(prices[0])  
                 normalized_prices = [(float(p) / initial_price - 1) * 100 for p in prices]
                 plt.plot(timestamps, normalized_prices, label=pair)
-        
+
         except (ValueError, IndexError, KeyError) as e:
             print(f"⚠ Ошибка обработки данных для {pair}: {e}")
             continue

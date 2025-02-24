@@ -72,7 +72,7 @@ async def trade_logic():
             trade_executed = False  
 
             # ✅ Отправляем отчет раз в 30 минут
-            if (time.time() - last_report_time) >= 60:
+            if (time.time() - last_report_time) >= 1800:
                 await send_market_report()
                 last_report_time = time.time()
 

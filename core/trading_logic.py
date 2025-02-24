@@ -150,42 +150,30 @@ async def send_market_report():
 
     await send_price_chart(formatted_data)  # Отправляем только если есть данные
 
-
-
 def format_historical_data(historical_data):
     formatted_data = {}
 
     for pair, data in historical_data.items():
-        print(f"\n🔍 DEBUG {pair}: {data}")  # 🔍 Выведет, что приходит в data
-        if not isinstance(data, dict) or "timestamps" not in data or "prices" not in data:
-            print(f"⚠ Ошибка структуры данных {pair}")
-            continue
+        print(f"\n🔍 DEBUG {pair}: {data[:5]}")  # Выводим первые 5 строк для проверки
 
-        timestamps = data["timestamps"]
-        prices = data["prices"]
-
-        if len(timestamps) < 2 or len(prices) < 2:
-            print(f"⚠ Недостаточно данных для {pair} (таймстемпов: {len(timestamps)}, цен: {len(prices)})")
-            continue
-
-        if len(timestamps) != len(prices):
-            print(f"⚠ Ошибка: Несовпадение таймстемпов ({len(timestamps)}) и цен ({len(prices)}) у {pair}")
+        if not isinstance(data, list) or len(data) < 2:
+            print(f"⚠ Ошибка структуры данных {pair} (ожидался список OHLCV)")
             continue
 
         try:
-            timestamps = [int(ts) for ts in timestamps]
-            prices = [float(p) for p in prices]
-        except ValueError as e:
-            print(f"⚠ Ошибка конвертации данных {pair}: {e}")
-            continue
+            timestamps = [int(candle[0]) for candle in data]  # Берём timestamp
+            prices = [float(candle[4]) for candle in data]  # Берём close price
 
-        formatted_data[pair] = {"timestamps": timestamps, "prices": prices}
+            formatted_data[pair] = {"timestamps": timestamps, "prices": prices}
+        
+        except (IndexError, ValueError) as e:
+            print(f"⚠ Ошибка обработки данных {pair}: {e}")
+            continue
 
     if not formatted_data:
         print("❌ Все данные отфильтрованы! Нет данных для графика.")
 
     return formatted_data
-
 
 async def update_balance():
     """Обновляет баланс после сделки."""

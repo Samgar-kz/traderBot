@@ -145,14 +145,6 @@ async def send_market_report():
 
     formatted_data = format_historical_data(historical_data)
 
-    print("🔍 formatted_data:", formatted_data)
-
-    first_timestamp = formatted_data['BTC/USDT']['timestamps'][0]
-    last_timestamp = formatted_data['BTC/USDT']['timestamps'][-1]
-    print(f"⏳ Временной диапазон: {first_timestamp} - {last_timestamp}")
-
-    print(f"💰 Первые 5 цен: {formatted_data['BTC/USDT']['prices'][:5]}")
-
     await send_price_chart(formatted_data)  # Отправляем только если есть данные
 
 def format_historical_data(historical_data):

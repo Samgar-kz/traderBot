@@ -145,9 +145,6 @@ async def send_market_report():
 
     formatted_data = format_historical_data(historical_data)
 
-  
-    print("📊 Данные перед графиком:", formatted_data)
-
     await send_price_chart(formatted_data)  # Отправляем только если есть данные
 
 def format_historical_data(historical_data):

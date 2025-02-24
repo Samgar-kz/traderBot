@@ -58,12 +58,7 @@ async def send_price_chart(historical_data):
     if not historical_data:
         send_telegram_message("⚠ Ошибка: Нет данных для графика!")
         return
-
-    print("📊 Полученные данные для графика:")
-    for pair, data in historical_data.items():
-        print(f"{pair}: {data}")
-        print("\n")
-
+    
     plt.figure(figsize=(10, 5))
 
     for pair, data in historical_data.items():

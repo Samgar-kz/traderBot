@@ -52,7 +52,7 @@ def validate_historical_data(historical_data):
     
     return valid_data if valid_data else None
 
-def send_price_chart(historical_data):
+async def send_price_chart(historical_data):
     """Строит и отправляет график цен для нескольких валютных пар."""
     
     if not historical_data:

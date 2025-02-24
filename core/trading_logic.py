@@ -83,7 +83,10 @@ async def trade_logic():
                         continue
 
                     # ✅ Обновляем исторические данные
-                    historical_data[pair].append([time.time(), 0, 0, 0, current_price, 0])
+                    # ✅ Получаем последний таймстемп, добавляем новую цену правильно
+                    last_timestamp = historical_data[pair][-1][0] + 60_000 if historical_data[pair] else int(time.time() * 1000)
+                    historical_data[pair].append([last_timestamp, 0, 0, 0, current_price, 0])
+
                     if len(historical_data[pair]) > 1000:
                         historical_data[pair].pop(0)
 

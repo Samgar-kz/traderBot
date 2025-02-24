@@ -2,6 +2,7 @@ import requests
 import matplotlib.pyplot as plt
 from io import BytesIO
 from config import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
+from datetime import datetime
 
 # ✅ Отправка текстового сообщения в Telegram
 def send_telegram_message(message):
@@ -71,11 +72,12 @@ async def send_price_chart(historical_data):
             prices = data["prices"]
 
             if len(prices) > 1:
-
-                # ✅ Нормализуем цены
                 initial_price = float(prices[0])  
                 normalized_prices = [(float(p) / initial_price - 1) * 100 for p in prices]
-
+                
+                # ✅ Преобразуем миллисекунды в datetime
+                timestamps = [datetime.fromtimestamp(ts / 1000) for ts in timestamps]
+                
                 plt.plot(timestamps, normalized_prices, label=pair)
 
         except (ValueError, IndexError, KeyError) as e:
@@ -86,7 +88,8 @@ async def send_price_chart(historical_data):
     plt.xlabel("Время")
     plt.ylabel("Изменение цены (%)")
     plt.title("📊 30-минутный отчет о рынке (нормализованные цены)")
-    plt.yscale("symlog")  # ✅ Логарифмическая шкала
+    plt.xticks(rotation=45)  # ✅ Поворачиваем подписи оси X для читаемости
+    plt.grid(True)  # ✅ Добавляем сетку для наглядности
 
     # ✅ Сохраняем изображение в BytesIO и отправляем
     img_buf = BytesIO()

@@ -167,8 +167,6 @@ def format_historical_data(historical_data):
 
         try:
             timestamps = [int(candle[0]) for candle in data]  # Берём timestamp
-            # Приводим миллисекунды к секундам
-            timestamps = [ts // 1000 for ts in timestamps]
             prices = [float(candle[4]) for candle in data]  # Берём close price
 
             formatted_data[pair] = {"timestamps": timestamps, "prices": prices}

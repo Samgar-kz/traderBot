@@ -1,7 +1,7 @@
 import ccxt
 import time
 from config import API_KEY, API_SECRET
-from telegram_bot import send_telegram_message
+from bot.telegram_bot import send_telegram_message
 
 # ✅ Подключение к Binance API
 exchange = ccxt.binance({

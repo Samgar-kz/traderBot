@@ -2,15 +2,16 @@ import asyncio
 import time
 import traceback
 import logging
-from binance_api import get_price, get_trade_amount, place_order, get_top_liquid_pairs, get_balance, get_historical_data
-from ai_trading import train_ai_model, predict_next_move_ai
-from risk_management import calculate_dynamic_risk
-from telegram_bot import send_telegram_message, send_price_chart
+from core.binance_api import get_price, get_trade_amount, place_order, get_top_liquid_pairs, get_balance, get_historical_data
+from ai.ai_training import train_ai_model
+from ai.ai_prediction import predict_next_move_ai
+from core.risk_management import calculate_dynamic_risk
+from bot.telegram_bot import send_telegram_message, send_price_chart
 from config import CONFIG
 
 logging.basicConfig(filename="trade_log.txt", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# Глобальные переменные
+# ✅ Глобальные переменные
 is_running = asyncio.Event()
 loss_streak = 0  
 initial_balance = None  
@@ -24,6 +25,7 @@ historical_data = {}
 PAIRS = []
 
 async def trade_logic():
+    """Основная торговая логика"""
     global loss_streak, initial_balance, previous_balance, last_trade_time, last_report_time
     global cycle_count, ai_models, scalers, historical_data, PAIRS  
 
@@ -35,7 +37,7 @@ async def trade_logic():
         send_telegram_message("🚀 AI Trading Bot запущен! Загружаем исторические данные...")
         is_running.set()
 
-        # Проверяем баланс
+        # ✅ Проверяем баланс
         initial_balance = get_balance()
         if initial_balance < 10:
             send_telegram_message(f"⚠ Недостаточно USDT для торговли (Баланс: {initial_balance:.2f} USDT). Минимум $10.")
@@ -45,18 +47,18 @@ async def trade_logic():
         previous_balance = initial_balance
         send_telegram_message(f"💰 Баланс: {initial_balance:.2f} USDT. Готов к торговле!")
 
-        # Получаем топ-ликвидные пары
+        # ✅ Получаем топ-ликвидные пары
         PAIRS = get_top_liquid_pairs(10)
         if not PAIRS:
             send_telegram_message("❌ Ошибка: Нет доступных пар для торговли!")
             is_running.clear()
             return  
 
-        # Загружаем исторические данные и обучаем AI
+        # ✅ Загружаем исторические данные и обучаем AI
         for pair in PAIRS:
             historical_data[pair] = get_historical_data(pair, '1m', 1000)
             if len(historical_data[pair]) >= 50:
-                send_telegram_message(f"🧠 AI обучается на 1000 свечей {pair}!")
+                send_telegram_message(f"🧠 AI обучается на 1000 свечей {pair}...")
                 ai_models[pair], scalers[pair] = train_ai_model(historical_data[pair])
             else:
                 send_telegram_message(f"⚠ Недостаточно данных для AI {pair}.")
@@ -69,8 +71,8 @@ async def trade_logic():
             cycle_count += 1  
             trade_executed = False  
 
-            # Отправляем отчет раз в 30 минут
-            if (time.time() - last_report_time) >= 60:
+            # ✅ Отправляем отчет раз в 30 минут
+            if (time.time() - last_report_time) >= 1800:
                 await send_market_report()
                 last_report_time = time.time()
 
@@ -80,19 +82,27 @@ async def trade_logic():
                     if current_price is None:
                         continue
 
-                    # Обновляем исторические данные
+                    # ✅ Обновляем исторические данные
                     historical_data[pair].append([time.time(), 0, 0, 0, current_price, 0])
                     if len(historical_data[pair]) > 1000:
                         historical_data[pair].pop(0)
 
-                    stop_loss, take_profit, trailing_stop = calculate_dynamic_risk(pair)
+                    # ✅ Динамический риск (исправлен вызов)
+                    stop_loss, take_profit, trailing_stop = calculate_dynamic_risk(historical_data[pair])
 
-                    # AI предсказывает сделку
+                    # ✅ AI предсказывает сделку
                     if ai_models.get(pair) is not None and scalers.get(pair) is not None:
                         decision = predict_next_move_ai(ai_models[pair], historical_data[pair][-1:], scalers[pair])
                     else:
                         decision = "hold"
 
+                    # ✅ AI сообщает статус
+                    if decision == "buy":
+                        send_telegram_message(f"📉 {pair} падает! AI ждет лучшую цену для покупки...")
+                    elif decision == "sell":
+                        send_telegram_message(f"📈 {pair} растет! AI готовится к продаже...")
+
+                    # ✅ AI покупает
                     if decision == "buy":
                         amount = get_trade_amount(pair)
                         if amount > 0:
@@ -102,6 +112,7 @@ async def trade_logic():
                             last_trade_time = time.time()
                             trade_executed = True
 
+                    # ✅ AI продает
                     elif decision == "sell":
                         amount = get_trade_amount(pair)
                         if amount > 0:
@@ -126,6 +137,7 @@ async def trade_logic():
         is_running.clear()
 
 async def send_market_report():
+    """Отправляет отчет о рынке каждые 30 минут."""
     send_telegram_message("📊 30-минутный отчет о рынке...")
     if not historical_data or all(len(data) == 0 for data in historical_data.values()):
         send_telegram_message("⚠ Ошибка: Нет данных для графика! Исторические данные не загружены.")
@@ -134,18 +146,15 @@ async def send_market_report():
     await send_price_chart(formatted_data)
 
 def format_historical_data(historical_data):
-    """
-    Преобразует исторические данные в словарь с ключами "timestamps" и "prices"
-    для передачи в send_price_chart().
-    """
+    """Преобразует исторические данные в формат для графика."""
     formatted_data = {}
 
     for pair, data in historical_data.items():
         if not data or len(data) == 0:
-            continue  # Пропускаем пустые значения
+            continue  
 
-        timestamps = [entry[0] for entry in data]  # Метки времени
-        prices = [entry[4] for entry in data]  # Цена закрытия (close)
+        timestamps = [entry[0] for entry in data]
+        prices = [entry[4] for entry in data]
 
         formatted_data[pair] = {
             "timestamps": timestamps,
@@ -154,8 +163,8 @@ def format_historical_data(historical_data):
 
     return formatted_data
 
-
 async def update_balance():
+    """Обновляет баланс после сделки."""
     global previous_balance
     current_balance = get_balance()
     if current_balance != previous_balance:
@@ -163,6 +172,7 @@ async def update_balance():
         previous_balance = current_balance  
 
 async def check_safety_mode():
+    """Останавливает бота при больших потерях."""
     global loss_streak, initial_balance
     try:
         current_balance = get_balance()
@@ -173,6 +183,7 @@ async def check_safety_mode():
         send_telegram_message(f"⚠ Ошибка в check_safety_mode: {e}")
 
 async def stop_trading():
+    """Останавливает торговлю."""
     if not is_running.is_set():
         send_telegram_message("⚠ Бот уже остановлен!")
         return

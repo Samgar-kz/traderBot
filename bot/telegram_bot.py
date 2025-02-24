@@ -71,8 +71,11 @@ async def send_price_chart(historical_data):
             prices = data["prices"]
 
             if len(prices) > 1:
+
+                # ✅ Нормализуем цены
                 initial_price = float(prices[0])  
                 normalized_prices = [(float(p) / initial_price - 1) * 100 for p in prices]
+
                 plt.plot(timestamps, normalized_prices, label=pair)
 
         except (ValueError, IndexError, KeyError) as e:

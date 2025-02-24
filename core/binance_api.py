@@ -89,24 +89,21 @@ def get_top_liquid_pairs(limit=5):
 # ✅ Получение исторических данных
 
 def get_historical_data(symbol, timeframe='1m', limit=100):
-    """Загружает исторические данные в корректном формате для AI-модели."""
+    """Загружает исторические данные в формате OHLCV"""
     try:
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
         
         if not ohlcv or len(ohlcv) < 2:
             logging.error(f"⚠ Недостаточно данных для {symbol}. Загружено: {len(ohlcv)} записей.")
-            return {"timestamps": [], "prices": []}
+            return []
         
-        timestamps = [candle[0] for candle in ohlcv]  # Берем время
-        prices = [candle[4] for candle in ohlcv]  # Берем цену закрытия
+        # 🔍 Отладочный вывод перед возвратом
+        print(f"\n🔍 {symbol} - Загружено {len(ohlcv)} записей")
+        print(f"📌 Первые 5 записей:\n{ohlcv[:5]}")
+        print(f"📌 Последние 5 записей:\n{ohlcv[-5:]}")
 
-        # 🔍 Отладочный вывод:
-        print(f"\n🔍 {symbol} - Загружено {len(timestamps)} записей")
-        print(f"📌 Первые 5 timestamps: {timestamps[:5]}")
-        print(f"📌 Последние 5 timestamps: {timestamps[-5:]}")
-        
-        return {"timestamps": timestamps, "prices": prices}  # ✅ Теперь данные в нужном формате
+        return ohlcv  # ✅ Данные остаются в формате OHLCV
     
     except Exception as e:
         logging.error(f"Ошибка загрузки истории {symbol}: {e}")
-        return {"timestamps": [], "prices": []}
+        return []

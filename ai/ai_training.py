@@ -4,7 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 import logging
 
-logging.basicConfig(filename="ai_training_log.txt", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(filename="ai_training_log.txt", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",encoding="utf-8")
 
 def prepare_data(historical_data):
     """Подготовка данных для обучения AI"""

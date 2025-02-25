@@ -72,6 +72,10 @@ async def trade_logic():
             cycle_count += 1  
             trade_executed = False  
 
+            X_test = scalers['BTC/USDT'].transform([[50000, 50100, 49900, 50050, 50000]])  
+            prediction = ai_models['BTC/USDT'].predict(X_test)  
+            send_telegram_message(f"✅ AI тестовое предсказание: {prediction}")
+
             # ✅ Отправляем отчет раз в 30 минут
             if (time.time() - last_report_time) >= 1800:
                 await send_market_report()
@@ -120,11 +124,15 @@ async def trade_logic():
                     # ✅ Динамический риск
                     stop_loss, take_profit, trailing_stop = calculate_dynamic_risk(historical_data[pair])
 
+                    send_telegram_message(f"📊 AI данные для {pair}: {historical_data[pair][-5:]}")  
+
                     # ✅ AI предсказывает сделку
                     if ai_models.get(pair) is not None and scalers.get(pair) is not None:
                         decision = predict_next_move_ai(ai_models[pair], historical_data[pair][-1:], scalers[pair])
                     else:
                         decision = "hold"
+
+                    send_telegram_message(f"🤖 AI решение по {pair}: {decision}")
 
                     # ✅ AI сообщает статус
                     if decision == "buy":

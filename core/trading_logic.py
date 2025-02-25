@@ -114,12 +114,20 @@ async def trade_logic():
                     if current_price is None:
                         continue
 
-                    # ✅ Обновляем исторические данные
-                    last_timestamp = historical_data[pair][-1][0] + 60_000 if historical_data[pair] else int(time.time() * 1000)
-                    historical_data[pair].append([last_timestamp, 0, 0, 0, current_price, 0])
+                    # ✅ Загружаем последние 3 свечи
+                    new_candles = get_historical_data(pair, '1m', 3)  # Берем последние 3 свечи
 
+                    # ✅ Добавляем только новые свечи (избегаем дубликатов)
+                    for candle in new_candles:
+                        if historical_data[pair] and candle[0] <= historical_data[pair][-1][0]:
+                            continue  # Пропускаем, если таймстемп уже есть
+
+                        historical_data[pair].append(candle)  # Добавляем новую свечу
+
+                    # ✅ Удаляем старые данные, если больше 1000
                     if len(historical_data[pair]) > 1000:
-                        historical_data[pair].pop(0)
+                        historical_data[pair] = historical_data[pair][-1000:]  # Оставляем последние 1000
+
 
                     # ✅ Динамический риск
                     stop_loss, take_profit, trailing_stop = calculate_dynamic_risk(historical_data[pair])

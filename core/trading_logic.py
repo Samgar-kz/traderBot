@@ -72,10 +72,6 @@ async def trade_logic():
             cycle_count += 1  
             trade_executed = False  
 
-            X_test = scalers['BTC/USDT'].transform([[50000, 50100, 49900, 50050, 50000]])  
-            prediction = ai_models['BTC/USDT'].predict(X_test)  
-            send_telegram_message(f"✅ AI тестовое предсказание: {prediction}")
-
             # ✅ Отправляем отчет раз в 30 минут
             if (time.time() - last_report_time) >= 1800:
                 await send_market_report()

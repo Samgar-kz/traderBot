@@ -75,16 +75,32 @@ def place_order(symbol, order_type, amount):
 # ✅ Получение топ-ликвидных пар
 
 def get_top_liquid_pairs(limit=5):
-    """Получает топ ликвидных пар с USDT"""
+    """Получает топ ликвидных пар, вычисляя изменение цены вручную."""
     try:
         tickers = exchange.fetch_tickers()
-        volumes = {symbol: tickers[symbol]['quoteVolume'] for symbol in tickers if '/USDT' in symbol}
-        sorted_pairs = sorted(volumes.items(), key=lambda x: x[1], reverse=True)
-        return [pair[0] for pair in sorted_pairs[:limit]]
+        
+        volumes = {}
+        for symbol, data in tickers.items():
+            if '/USDT' in symbol and data['quoteVolume'] > 0 and data['open'] is not None and data['last'] is not None:
+                change = ((data['last'] - data['open']) / data['open']) * 100
+                volumes[symbol] = (data['quoteVolume'], change)
+
+        # ✅ Фильтруем только растущие пары
+        growing_pairs = {k: v for k, v in volumes.items() if v[1] > 0}
+        
+        # ✅ Сортируем по ликвидности
+        sorted_pairs = sorted(growing_pairs.items(), key=lambda x: x[1][0], reverse=True)
+
+        # ✅ Берем топ-N пар
+        top_pairs = [pair[0] for pair in sorted_pairs[:limit]]
+
+        return top_pairs
+
     except Exception as e:
         logging.error(f"Ошибка получения ликвидных пар: {e}")
         send_telegram_message(f"⚠ Ошибка получения ликвидных пар: {e}")
         return []
+
 
 # ✅ Получение исторических данных
 

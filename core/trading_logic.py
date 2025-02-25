@@ -56,12 +56,13 @@ async def trade_logic():
 
         # ✅ Загружаем исторические данные и обучаем AI
         for pair in PAIRS:
-            historical_data[pair] = get_historical_data(pair, '1m', 1000)
-            if len(historical_data[pair]) >= 50:
-                send_telegram_message(f"🧠 AI обучается на 1000 свечей {pair}...")
-                ai_models[pair], scalers[pair] = train_ai_model(historical_data[pair])
-            else:
-                send_telegram_message(f"⚠ Недостаточно данных для AI {pair}.")
+            if pair not in historical_data:  # Загружаем только если нет данных
+                historical_data[pair] = get_historical_data(pair, '1m', 1000)
+                if len(historical_data[pair]) >= 50:
+                    send_telegram_message(f"🧠 AI обучается на 1000 свечей {pair}...")
+                    ai_models[pair], scalers[pair] = train_ai_model(historical_data[pair])
+                else:
+                    send_telegram_message(f"⚠ Недостаточно данных для AI {pair}.")
 
         send_telegram_message("✅ AI готов к торговле! Начинаем реальный трейдинг.")
         last_trade_time = time.time()
@@ -76,6 +77,33 @@ async def trade_logic():
                 await send_market_report()
                 last_report_time = time.time()
 
+            # ✅ Обновляем топ-ликвидные пары раз в 10 минут
+            if cycle_count % 10 == 0:
+                new_pairs = get_top_liquid_pairs(10)
+                
+                # ✅ Если список изменился — обновляем
+                if set(new_pairs) != set(PAIRS):
+                    send_telegram_message(f"🔄 Обновлен список ТОП пар: {new_pairs}")
+
+                    # ✅ Удаляем старые пары, которых больше нет в топе
+                    for old_pair in list(historical_data.keys()):
+                        if old_pair not in new_pairs:
+                            del historical_data[old_pair]
+                            del ai_models[old_pair]
+                            del scalers[old_pair]
+
+                    PAIRS = new_pairs
+
+                    # ✅ Загружаем исторические данные только для новых пар
+                    for pair in PAIRS:
+                        if pair not in historical_data:
+                            historical_data[pair] = get_historical_data(pair, '1m', 1000)
+                            if len(historical_data[pair]) >= 50:
+                                send_telegram_message(f"🧠 AI обучается на 1000 свечей {pair}...")
+                                ai_models[pair], scalers[pair] = train_ai_model(historical_data[pair])
+                            else:
+                                send_telegram_message(f"⚠ Недостаточно данных для AI {pair}.")
+
             for pair in PAIRS:
                 try:
                     current_price = get_price(pair)
@@ -83,14 +111,13 @@ async def trade_logic():
                         continue
 
                     # ✅ Обновляем исторические данные
-                    # ✅ Получаем последний таймстемп, добавляем новую цену правильно
                     last_timestamp = historical_data[pair][-1][0] + 60_000 if historical_data[pair] else int(time.time() * 1000)
                     historical_data[pair].append([last_timestamp, 0, 0, 0, current_price, 0])
 
                     if len(historical_data[pair]) > 1000:
                         historical_data[pair].pop(0)
 
-                    # ✅ Динамический риск (исправлен вызов)
+                    # ✅ Динамический риск
                     stop_loss, take_profit, trailing_stop = calculate_dynamic_risk(historical_data[pair])
 
                     # ✅ AI предсказывает сделку
